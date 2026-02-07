@@ -12,6 +12,7 @@ import Control.Monad.ST.Ref (modify
                             ,new
                             ,read
                             )
+import Data.Tuple (Tuple(..))
 
 fibTailRec :: Int -> Int
 fibTailRec n = fibh n 0 1
@@ -30,10 +31,28 @@ fibonacciST n = run do
   { acc } <- read ref
   pure acc
 
+fibStTup :: Int -> Int
+fibStTup n = run do
+  let init = Tuple 0 1
+  ref <- new init
+
+  for 0 n \_ ->
+    modify step ref
+
+  (Tuple acc _) <- read ref
+  pure acc
+  where step :: Tuple Int Int -> Tuple Int Int
+        step (Tuple acc next) = Tuple next (next+acc)
+
 main :: Effect Unit
 main = do
-  log "testing fibTailRec 1000"
-  bench \_ -> fibTailRec  1000
+  log "testing fibTailRec  1000"
+  bench \_ -> fibTailRec   1000
+  log ""
   log "testing fibonacciST 1000"
-  bench \_ -> fibonacciST 1000
+  bench \_ -> fibonacciST  1000
+  log ""
+  log "testing fibStTup    1000"
+  bench \_ -> fibStTup     1000
+  log ""
   log "done"
